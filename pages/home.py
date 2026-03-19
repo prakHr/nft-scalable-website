@@ -43,12 +43,13 @@ cache = {}  # {(username, page): [images]}
 
 def get_page_images(page):
     username = current_user.get_id()
-    key = (username, page)
+    password = current_user.get_password()
+    key = (username,password, page)
     if key in cache:
         return cache[key]
 
     # --- Seed random with username + page for reproducible per-user NFTs ---
-    seed = int(hashlib.sha256(f"{username}-{page}".encode()).hexdigest(), 16) % (2**32)
+    seed = int(hashlib.sha256(f"{username}-{password}-{page}".encode()).hexdigest(), 16) % (2**32)
     random.seed(seed)
 
     images = [generate_art() for _ in range(PAGE_SIZE)]
