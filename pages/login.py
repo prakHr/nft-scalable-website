@@ -50,7 +50,8 @@ def login_callback(n_clicks, username, password):
     user = User(username)
     login_user(user)
      # --- hash password for NFT seeding ---
-    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+    hashed_pw = password
+    # hashed_pw = hashlib.sha256(password.encode()).hexdigest()
     # Store hashed password in global cache
     hashed_pw_cache[username] = hashed_pw
     return html.A("Go to Home", href="/"), hashed_pw  # redirect to home
