@@ -44,14 +44,15 @@ def login_callback(n_clicks, username, password):
     # Check input
     if not username or not password:
         return "Enter both username and password.", None
+    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+    if username in hashed_pw_cache and hashed_pw_cache[username] == hashed_pw:
+        return "User already logged in with this password.", hashed_pw
+
 
    
     # Log in the user
     user = User(username)
     login_user(user)
-     # --- hash password for NFT seeding ---
-    # hashed_pw = password
-    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
     # Store hashed password in global cache
     hashed_pw_cache[username] = hashed_pw
     return html.A("Go to Home", href="/"), hashed_pw  # redirect to home
