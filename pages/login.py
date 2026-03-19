@@ -34,7 +34,7 @@ def login_callback(n_clicks, username, password):
 
    
     # Log in the user
-    user = User(username)
+    user = User(username,password)
     login_user(user)
     return html.A("Go to Home", href="/")  # redirect to home
 
