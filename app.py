@@ -1,3 +1,4 @@
+# app.py
 from dash import Dash, html
 import dash
 from flask import Flask
@@ -7,7 +8,9 @@ from users import User
 
 # --- Flask server ---
 server = Flask(__name__)
-server.secret_key = "supersecretkey"
+# It's better to use environment variable for security
+import os
+server.secret_key = os.environ.get("SECRET_KEY", "supersecretkey")
 
 login_manager = LoginManager()
 login_manager.init_app(server)
@@ -26,5 +29,4 @@ app.layout = html.Div([
     dash.page_container
 ])
 
-if __name__ == "__main__":
-    app.run_server(debug=True)
+server = app.server  
