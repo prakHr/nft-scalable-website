@@ -3,3 +3,4 @@ pillow
 numpy
 flask
 flask-login
+gunicorn
