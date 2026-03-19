@@ -17,8 +17,8 @@ login_manager.init_app(server)
 login_manager.login_view = "/login"
 
 @login_manager.user_loader
-def load_user(user_id):
-    return User(user_id)
+def load_user(user_id,password):
+    return User(user_id,password)
 
 # --- Dash app ---
 app = Dash(__name__, server=server, use_pages=True)
