@@ -36,7 +36,6 @@ def login_callback(n_clicks, username, password):
     # Log in the user
     user = User(username)
     login_user(user)
-    print("Logged in user:", current_user.get_id())
     return html.A("Go to Home", href="/")  # redirect to home
 
 # --- Callback to clear inputs on page load ---
