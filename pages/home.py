@@ -100,7 +100,7 @@ def update(page_current, page_size, hashed_pw):
     # Check authentication and verify hashed password against cache
     username = current_user.get_id()
     hashed_pw_from_store = hashed_pw_cache.get(username)
-    print(hashed_pw_from_store)
+    # print(hashed_pw_from_store)
     if not username or hashed_pw_cache.get(username) != hashed_pw_from_store:
         return [], [html.Div("Access Denied. Please login again.")]
     username = current_user.get_id()
