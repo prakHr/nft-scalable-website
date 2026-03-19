@@ -38,3 +38,12 @@ def login_callback(n_clicks, username, password):
     login_user(user)
     print("Logged in user:", current_user.get_id())
     return html.A("Go to Home", href="/")  # redirect to home
+
+# --- Callback to clear inputs on page load ---
+@callback(
+    Output("username", "value"),
+    Output("password", "value"),
+    Input("login-url", "pathname")  # triggers whenever the login page is loaded
+)
+def clear_inputs_on_load(pathname):
+    return "", ""
