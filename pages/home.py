@@ -1,12 +1,12 @@
 # pages/home.py
-from dash import html, dash_table, Input, Output
+from dash import html, dash_table, dcc, Input, Output, State, callback
 import dash
 from flask_login import current_user
 from io import BytesIO
 import base64
 import random, colorsys, hashlib
 from PIL import Image, ImageDraw, ImageChops
-
+from .cache import hashed_pw_cache  
 dash.register_page(__name__, path="/")  # Home page
 
 # ---------------- Image Generation ----------------
@@ -35,33 +35,27 @@ def generate_art(size=128):
     image.save(buff, format="WEBP", quality=70)
     return base64.b64encode(buff.getvalue()).decode()
 
-
 # ---------------- In-memory cache ----------------
-TOTAL_IMAGES = 1000
 PAGE_SIZE = 10
-cache = {}  # {(username, page): [images]}
+cache = {}  # {(username, hashed_pw, page): [images]}
 
-def get_page_images(page):
-    username = current_user.get_id()
-    password = current_user.get_password()
-    key = (username,password, page)
+def get_page_images(username, hashed_pw, page):
+    key = (username, hashed_pw, page)
     if key in cache:
         return cache[key]
 
-    # --- Seed random with username + page for reproducible per-user NFTs ---
-    seed = int(hashlib.sha256(f"{username}-{password}-{page}".encode()).hexdigest(), 16) % (2**32)
+    # --- Seed random with username + hashed password + page for reproducible per-user NFTs ---
+    seed = int(hashlib.sha256(f"{username}-{hashed_pw}-{page}".encode()).hexdigest(), 16) % (2**32)
     random.seed(seed)
 
     images = [generate_art() for _ in range(PAGE_SIZE)]
     cache[key] = images
     return images
 
-
 # ---------------- Layout ----------------
 def layout():
     if not current_user.is_authenticated:
         return html.Div([
-            html.H2("Access Denied"),
             html.A("Go to Login", href="/login")
         ])
 
@@ -73,6 +67,9 @@ def layout():
         page_action="custom",
     )
 
+    # Hidden store to receive password hash from login
+    password_store = dcc.Store(id="user-password-store")
+
     nft_container = html.Div(
         id="nft-container",
         style={"display": "flex", "flexWrap": "wrap", "marginTop": "20px"},
@@ -83,20 +80,31 @@ def layout():
         html.A("Logout", href="/logout", style={"marginLeft": "20px"}),
         html.H2(f"Welcome {current_user.get_id()}!"),
         html.P("This is your unique NFT gallery."),
+        password_store,
         table,
         nft_container
     ])
 
-
 # ---------------- Callbacks ----------------
-@dash.callback(
+@callback(
     Output("datatable-pagination", "data"),
     Output("nft-container", "children"),
     Input("datatable-pagination", "page_current"),
     Input("datatable-pagination", "page_size"),
+    State("user-password-store", "data")
 )
-def update(page_current, page_size):
-    images = get_page_images(page_current)
+def update(page_current, page_size, hashed_pw):
+    # if not current_user.is_authenticated:
+    #     return [], [html.Div("Access Denied. Please login again.")]
+
+    # Check authentication and verify hashed password against cache
+    username = current_user.get_id()
+    hashed_pw_from_store = hashed_pw_cache.get(username)
+    if not username or hashed_pw_cache.get(username) != hashed_pw_from_store:
+        return [], [html.Div("Access Denied. Please login again.")]
+    username = current_user.get_id()
+    images = get_page_images(username, hashed_pw_from_store, page_current)
+
     children = [
         html.Div([
             html.P(f"ID: {page_current * page_size + i + 1}"),
@@ -106,5 +114,6 @@ def update(page_current, page_size):
             )
         ]) for i, img in enumerate(images)
     ]
+
     data = [{"id": page_current * page_size + i + 1} for i in range(len(images))]
     return data, children

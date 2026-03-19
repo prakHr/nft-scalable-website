@@ -17,8 +17,8 @@ login_manager.init_app(server)
 login_manager.login_view = "/login"
 
 @login_manager.user_loader
-def load_user(user_id,password):
-    return User(user_id,password)
+def load_user(user_id):
+    return User(user_id)
 
 # --- Dash app ---
 app = Dash(__name__, server=server, use_pages=True)
@@ -28,5 +28,9 @@ app = Dash(__name__, server=server, use_pages=True)
 app.layout = html.Div([
     dash.page_container
 ])
+app.title = "NFT Gallery"
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 

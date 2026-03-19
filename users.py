@@ -5,9 +5,9 @@ from flask_login import UserMixin
 USERS = {}
 
 class User(UserMixin):
-    def __init__(self, username,password):
+    def __init__(self, username):
         self.id = username
-        self.password = password
+        
 
     @staticmethod
     def validate_login(username, password):

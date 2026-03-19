@@ -19,8 +19,5 @@ layout = html.Div([
     
 )
 def do_logout(_):
-    print("Logging out user...")
-    print("Current user before logout:", current_user.get_id())
     logout_user()  # This is Flask-Login's logout
-    print("Current user after logout:", current_user.get_id())
     return "/login"
