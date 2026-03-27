@@ -5,3 +5,4 @@ flask
 flask-login
 gunicorn
 cryptography
+dash-bootstrap-components
