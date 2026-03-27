@@ -1,15 +1,18 @@
-# pages/home.py
 from dash import html, dash_table, dcc, Input, Output, State, callback
 import dash
+import dash_bootstrap_components as dbc
 from flask_login import current_user
 from io import BytesIO
 import base64
 import random, colorsys, hashlib
 from PIL import Image, ImageDraw, ImageChops
 from .cache import hashed_pw_cache  
-dash.register_page(__name__, path="/")  # Home page
 
-# ---------------- Image Generation ----------------
+dash.register_page(__name__, path="/")
+
+PAGE_SIZE = 10
+cache = {}
+
 def random_point(size, padding=5):
     return random.randint(padding, size - padding)
 
@@ -35,16 +38,11 @@ def generate_art(size=128):
     image.save(buff, format="WEBP", quality=70)
     return base64.b64encode(buff.getvalue()).decode()
 
-# ---------------- In-memory cache ----------------
-PAGE_SIZE = 10
-cache = {}  # {(username, hashed_pw, page): [images]}
-
 def get_page_images(username, hashed_pw, page):
     key = (username, hashed_pw, page)
     if key in cache:
         return cache[key]
 
-    # --- Seed random with username + hashed password + page for reproducible per-user NFTs ---
     seed = int(hashlib.sha256(f"{username}-{hashed_pw}-{page}".encode()).hexdigest(), 16) % (2**32)
     random.seed(seed)
 
@@ -52,68 +50,82 @@ def get_page_images(username, hashed_pw, page):
     cache[key] = images
     return images
 
-# ---------------- Layout ----------------
 def layout():
     if not current_user.is_authenticated:
-        return html.Div([
-            html.A("Go to Login", href="/login")
+        return dbc.Container([
+            dbc.Button("User seen once successfully!, Please use secure login", href="/login", color="primary")
         ])
 
     table = dash_table.DataTable(
         id="datatable-pagination",
+       
         columns=[{"name": "ID", "id": "id"}],
         page_current=0,
         page_size=PAGE_SIZE,
         page_action="custom",
+
+        style_table={
+            "overflowX": "auto",
+            "border": "1px solid var(--bs-border-color)",
+        },
+
+        style_header={
+            "backgroundColor": "var(--bs-tertiary-bg)",
+            "color": "var(--bs-body-color)",
+        },
+
+        style_cell={
+            "backgroundColor": "var(--bs-body-bg)",
+            "color": "var(--bs-body-color)",
+            "border": "1px solid var(--bs-border-color)",
+        },
     )
 
-    # Hidden store to receive password hash from login
-    password_store = dcc.Store(id="user-password-store")
+    return dbc.Container([
 
-    nft_container = html.Div(
-        id="nft-container",
-        style={"display": "flex", "flexWrap": "wrap", "marginTop": "20px"},
-    )
+        dbc.Row([
+            dbc.Col(html.A("About", href="/about", className="btn btn-secondary"), width="auto"),
+            dbc.Col(html.A("Logout", href="/login", className="btn btn-danger ms-2"), width="auto"),
+        ], className="mb-3"),
 
-    return html.Div([
-        html.A("Go to About", href="/about"),
-        html.A("Logout", href="/logout", style={"marginLeft": "20px"}),
-        html.H2(f"Welcome {current_user.get_id()}!"),
-        html.P("This is your unique NFT gallery."),
-        password_store,
+        html.H2(f"Welcome {current_user.get_id()}"),
+        html.P("Your NFT gallery"),
+
+        dcc.Store(id="user-password-store"),
         table,
-        nft_container
-    ])
+        html.Div(id="nft-container", className="d-flex flex-wrap mt-4")
 
-# ---------------- Callbacks ----------------
+    ], fluid=True)
+
 @callback(
     Output("datatable-pagination", "data"),
     Output("nft-container", "children"),
     Input("datatable-pagination", "page_current"),
     Input("datatable-pagination", "page_size"),
+    Input("theme-dropdown", "value"),  # 👈 live update trigger
     State("user-password-store", "data")
 )
-def update(page_current, page_size, hashed_pw):
-    # if not current_user.is_authenticated:
-    #     return [], [html.Div("Access Denied. Please login again.")]
+def update(page_current, page_size, theme, hashed_pw):
 
-    # Check authentication and verify hashed password against cache
     username = current_user.get_id()
     hashed_pw_from_store = hashed_pw_cache.get(username)
+
     if not username or hashed_pw_cache.get(username) != hashed_pw_from_store:
-        return [], [html.Div("Access Denied. Please login again.")]
-    username = current_user.get_id()
+        return [], [dbc.Alert("Access Denied", color="danger")]
+
     images = get_page_images(username, hashed_pw_from_store, page_current)
 
-    children = [
-        html.Div([
-            html.P(f"ID: {page_current * page_size + i + 1}"),
-            html.Img(
-                src=f"data:image/webp;base64,{img}",
-                style={"width": "128px", "border": "1px solid blue", "margin": "5px"},
-            )
-        ]) for i, img in enumerate(images)
+    cards = [
+        dbc.Card(
+            dbc.CardBody([
+                html.P(f"ID: {i+1}"),
+                html.Img(src=f"data:image/webp;base64,{img}", className="img-fluid")
+            ]),
+            className="m-2",
+            style={"width": "250px"}
+        )
+        for i, img in enumerate(images)
     ]
 
-    data = [{"id": page_current * page_size + i + 1} for i in range(len(images))]
-    return data, children
+    data = [{"id": i+1} for i in range(len(images))]
+    return data, cards
