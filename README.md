@@ -32,7 +32,7 @@
 pip install prakhar-nft-app==2.6.0
 
 ## Steps to run
-from prakhar_nft_app import main
-app = main.launch_app()
-app.run()
+* from prakhar_nft_app import main
+* app = main.launch_app()
+* app.run()
 
