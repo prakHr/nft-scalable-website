@@ -26,5 +26,13 @@
 
 
 ## Here is the python package for the same
-[https://pypi.org/project/prakhar-nft-app/]
+[[https://pypi.org/project/prakhar-nft-app/](https://pypi.org/project/prakhar-nft-app/2.6.0/)]
+
+## Installation
+pip install prakhar-nft-app==2.6.0
+
+## Steps to run
+from prakhar_nft_app import main
+app = main.launch_app()
+app.run()
 
