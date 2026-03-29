@@ -36,3 +36,6 @@ pip install prakhar-nft-app==2.6.0
 * app = main.launch_app()
 * app.run()
 
+## Deployed the same at
+[https://nft-scalable-website.onrender.com/]
+
