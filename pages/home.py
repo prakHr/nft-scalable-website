@@ -7,6 +7,13 @@ import base64
 import random, colorsys, hashlib
 from PIL import Image, ImageDraw, ImageChops
 from .cache import hashed_pw_cache  
+import random
+
+def random_color_1():
+    h = random.randint(0, 360)   # hue (rainbow position)
+    s = 70                       # saturation (keep high for richness)
+    l = 50                       # lightness (balanced, not too dark/light)
+    return f"hsl({h}, {s}%, {l}%)"
 
 dash.register_page(__name__, path="/")
 
@@ -126,6 +133,22 @@ def update(page_current, page_size, theme, hashed_pw):
         )
         for i, img in enumerate(images)
     ]
+    shots_made = 100 # can be 2000
+    kobe_buttons = [
+        dbc.Button(
+            "Jellybean RIP Kobe",
+            href="https://github.com/praKhr",
+            style={
+                "backgroundColor": random_color_1(),
+                "color": "white",
+                "border": "none"
+            },
+            className="me-2",
+            id=f"kobe-btn-{i+1}"
+        )
+        for i in range(shots_made)
+    ]
+    cards.extend(kobe_buttons)
 
     data = [{"id": i+1} for i in range(len(images))]
     return data, cards
